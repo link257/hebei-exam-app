@@ -357,7 +357,7 @@
         }
 
         try {
-          var resp = await fetch('/api/generate-answer', {
+          var resp = await fetch('https://hebei-exam-app-production.up.railway.app/api/generate-answer', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
