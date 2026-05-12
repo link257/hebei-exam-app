@@ -203,8 +203,8 @@ app.use(express.static(__dirname, {
 // ============================================================
 //  启动
 // ============================================================
-app.listen(PORT, () => {
-  console.log(`✅ 服务器已启动: http://localhost:${PORT}`);
-  console.log(`📡 POST http://localhost:${PORT}/api/generate-answer`);
-  console.log(`🩺 GET  http://localhost:${PORT}/api/health`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ 服务器已启动: http://0.0.0.0:${PORT}`);
+  console.log(`📡 POST http://0.0.0.0:${PORT}/api/generate-answer`);
+  console.log(`🩺 GET  http://0.0.0.0:${PORT}/api/health`);
 });
