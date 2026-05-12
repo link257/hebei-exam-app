@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>模拟准备 - 河北省公务员面试</title>
+  <link rel="stylesheet" href="css/shared.css">
+</head>
+<body>
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <a href="javascript:history.back()" class="back-btn">←</a>
+      <span class="top-bar-title">模拟面试</span>
+    </div>
+  </div>
+
+  <div class="page-container" style="padding-top: 12px;">
+    <!-- 模式选择 -->
+    <div class="section-title">选择答题模式</div>
+
+    <div style="display: grid; gap: 12px; margin-bottom: 20px;">
+      <a href="text-answer.html" class="card" style="display: flex; align-items: center; gap: 16px; padding: 20px; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s;">
+        <div style="width: 48px; height: 48px; border-radius: 14px; background: #EBF0FF; display: flex; align-items: center; justify-content: center; font-size: 24px;">✍️</div>
+        <div style="flex:1;">
+          <h4 style="font-size: 15px; font-weight: 600; margin-bottom: 4px;">文字答题</h4>
+          <p style="font-size: 12px; color: var(--text-sub);">适合安静环境，打字录入回答，AI自动评分</p>
+        </div>
+        <span style="font-size: 18px; color: var(--text-sub);">→</span>
+      </a>
+
+      <a href="voice-answer.html" class="card" style="display: flex; align-items: center; gap: 16px; padding: 20px; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s;">
+        <div style="width: 48px; height: 48px; border-radius: 14px; background: #E6F9F4; display: flex; align-items: center; justify-content: center; font-size: 24px;">🎤</div>
+        <div style="flex:1;">
+          <h4 style="font-size: 15px; font-weight: 600; margin-bottom: 4px;">语音答题</h4>
+          <p style="font-size: 12px; color: var(--text-sub);">模拟真实面试，语音录制回答，AI语音识别评分</p>
+        </div>
+        <span style="font-size: 18px; color: var(--text-sub);">→</span>
+      </a>
+    </div>
+
+    <!-- 模拟设置 -->
+    <div class="section-title">模拟设置</div>
+    <div class="card" style="margin-bottom: 16px;">
+      <div class="input-group">
+        <label>题目数量</label>
+        <div style="display: flex; gap: 8px;">
+          <span class="filter-chip" style="flex:1; text-align: center; background: var(--primary); color: white; border-color: var(--primary);">1题</span>
+          <span class="filter-chip" style="flex:1; text-align: center;">3题</span>
+          <span class="filter-chip" style="flex:1; text-align: center;">5题</span>
+        </div>
+      </div>
+      <div class="input-group" style="margin-bottom: 0;">
+        <label>题目类型</label>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <span class="filter-chip active" style="background: var(--primary); color: white; border-color: var(--primary);">不限</span>
+          <span class="filter-chip">综合分析</span>
+          <span class="filter-chip">组织管理</span>
+          <span class="filter-chip">应急应变</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 当前题目预览 -->
+    <div class="section-title">
+      本次题目
+    </div>
+    <div class="card">
+      <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+        <span class="tag tag-blue">综合分析</span>
+      </div>
+      <p style="font-size: 14px; line-height: 1.7; color: var(--text-main);">
+        如何看待基层干部"躺平"现象？请结合实际谈谈你的看法。
+      </p>
+    </div>
+
+    <!-- 提示信息 -->
+    <div style="background: #EBF0FF; border-radius: 10px; padding: 14px; font-size: 12px; color: var(--secondary); line-height: 1.6; margin-bottom: 16px;">
+      💡 提示：请在一个安静的环境中进行模拟，模拟过程中请勿退出页面，否则将丢失当前进度。
+    </div>
+  </div>
+
+  <!-- 底部导航 -->
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item">
+      <span class="nav-icon">🏠</span>
+      <span>首页</span>
+    </a>
+    <a href="question-bank.html" class="nav-item">
+      <span class="nav-icon">📚</span>
+      <span>题库</span>
+    </a>
+    <a href="simulate-prep.html" class="nav-item active">
+      <span class="nav-icon">🎯</span>
+      <span>模拟</span>
+    </a>
+    <a href="record.html" class="nav-item">
+      <span class="nav-icon">📊</span>
+      <span>记录</span>
+    </a>
+    <a href="profile.html" class="nav-item">
+      <span class="nav-icon">👤</span>
+      <span>我的</span>
+    </a>
+  </nav>
+</body>
+</html>

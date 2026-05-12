@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AI参考答案 - 河北省公务员面试</title>
+  <link rel="stylesheet" href="css/shared.css">
+  <style>
+    body { padding-top: 0; }
+    .header-bar {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      max-width: 390px;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      gap: 12px;
+    }
+    .ai-content {
+      padding: 16px;
+      padding-top: 68px;
+      padding-bottom: 24px;
+      min-height: 100vh;
+    }
+    .score-ring {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: conic-gradient(var(--secondary) 0deg 252deg, #E5E7EB 252deg 360deg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.5s;
+    }
+    .score-ring-inner {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .score-value { font-size: 20px; font-weight: 800; color: var(--primary); line-height: 1; }
+    .score-label { font-size: 10px; color: var(--text-sub); }
+    .dimension-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .dimension-item:last-child { border-bottom: none; }
+    .dimension-bar {
+      width: 100px;
+      height: 6px;
+      border-radius: 6px;
+      background: #E5E7EB;
+      overflow: hidden;
+    }
+    .dimension-bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      background: var(--secondary);
+      transition: width 0.4s ease;
+    }
+    .answer-section {
+      margin-bottom: 16px;
+    }
+    .answer-section h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      padding-left: 12px;
+      border-left: 3px solid var(--secondary);
+    }
+    .answer-section p {
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--text-main);
+      white-space: pre-wrap;
+    }
+    .section-innovation {
+      background: #D1FAE5;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+    }
+    .section-innovation h4 {
+      border-left-color: #00B894;
+    }
+    .section-innovation p {
+      color: #065F46;
+    }
+    .loading-placeholder {
+      text-align: center;
+      padding: 40px 16px;
+      color: var(--text-sub);
+      font-size: 14px;
+    }
+    .loading-placeholder .spinner {
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--secondary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 12px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .error-message {
+      text-align: center;
+      padding: 40px 16px;
+      color: var(--danger);
+      font-size: 14px;
+    }
+    .hidden { display: none; }
+    .typing-cursor::after {
+      content: '|';
+      animation: blink 0.7s step-end infinite;
+      color: var(--secondary);
+    }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header-bar">
+    <a href="javascript:history.back()" class="back-btn">←</a>
+    <span style="font-size: 16px; font-weight: 600;">AI 智能评估</span>
+  </div>
+
+  <div class="ai-content" id="app">
+    <!-- 加载状态 -->
+    <div class="loading-placeholder" id="loadingState">
+      <div class="spinner"></div>
+      <div>AI正在生成参考答案...</div>
+    </div>
+
+    <!-- 错误提示（隐藏） -->
+    <div class="error-message hidden" id="errorState">
+      <p style="font-size: 28px; margin-bottom: 12px;">⚠️</p>
+      <p id="errorText">加载失败，请稍后重试。</p>
+      <button class="btn btn-primary" style="margin-top: 16px; width: auto; padding: 10px 32px;" onclick="location.reload()">重新加载</button>
+    </div>
+
+    <!-- 评分概览（初始隐藏） -->
+    <div class="card hidden" id="scoreCard" style="display: flex; gap: 16px; align-items: center; margin-bottom: 12px;">
+      <div class="score-ring" id="scoreRing">
+        <div class="score-ring-inner">
+          <span class="score-value" id="scoreValue">--</span>
+          <span class="score-label">分</span>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 4px;">综合评分</h3>
+        <p style="font-size: 13px; color: var(--text-sub);" id="scoreComment">--</p>
+        <p style="font-size: 12px; color: var(--text-sub); margin-top: 4px;" id="beatPercent">--</p>
+      </div>
+    </div>
+
+    <!-- 分项评分（初始隐藏） -->
+    <div class="card hidden" id="dimensionsCard" style="margin-bottom: 12px;">
+      <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">📊 分项评分</h4>
+      <div id="dimensionsContainer"></div>
+    </div>
+
+    <!-- AI 参考回答（初始隐藏） -->
+    <div class="card hidden" id="answerCard" style="margin-bottom: 12px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+        <span style="font-size: 18px;">🤖</span>
+        <h4 style="font-size: 14px; font-weight: 600;">AI 参考答案</h4>
+        <span class="tag tag-green">DeepSeek 生成</span>
+      </div>
+
+      <div class="answer-section hidden" id="sec-opening">
+        <h4>金句开场</h4>
+        <p id="text-opening"></p>
+      </div>
+      <div class="answer-section hidden" id="sec-analysis">
+        <h4>核心分析</h4>
+        <p id="text-analysis"></p>
+      </div>
+      <div class="section-innovation hidden" id="sec-innovation">
+        <h4>AI创新建议</h4>
+        <p id="text-innovation" style="color:#065F46;"></p>
+      </div>
+      <div class="answer-section hidden" id="sec-measures">
+        <h4>传统对策</h4>
+        <p id="text-measures"></p>
+      </div>
+      <div class="answer-section hidden" id="sec-conclusion">
+        <h4>升华结语</h4>
+        <p id="text-conclusion"></p>
+      </div>
+    </div>
+
+    <!-- 导航按钮（初始隐藏） -->
+    <div class="hidden" id="navButtons">
+      <a href="analysis" class="btn btn-outline" style="margin-bottom: 12px;">📖 查看答题思路解析</a>
+      <a href="question-bank" class="btn btn-primary">再来一题</a>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // ===== DOM 引用 =====
+      var loadingEl   = document.getElementById('loadingState');
+      var errorEl     = document.getElementById('errorState');
+      var errorText   = document.getElementById('errorText');
+      var scoreCard   = document.getElementById('scoreCard');
+      var scoreValue  = document.getElementById('scoreValue');
+      var scoreRing   = document.getElementById('scoreRing');
+      var scoreCmnt   = document.getElementById('scoreComment');
+      var beatEl      = document.getElementById('beatPercent');
+      var dimsCard    = document.getElementById('dimensionsCard');
+      var dimsCont    = document.getElementById('dimensionsContainer');
+      var ansCard     = document.getElementById('answerCard');
+      var navBtns     = document.getElementById('navButtons');
+
+      var sections = {
+        opening:    { el: document.getElementById('sec-opening'),    text: document.getElementById('text-opening') },
+        analysis:   { el: document.getElementById('sec-analysis'),   text: document.getElementById('text-analysis') },
+        innovation: { el: document.getElementById('sec-innovation'), text: document.getElementById('text-innovation') },
+        measures:   { el: document.getElementById('sec-measures'),   text: document.getElementById('text-measures') },
+        conclusion: { el: document.getElementById('sec-conclusion'), text: document.getElementById('text-conclusion') },
+      };
+
+      var DIM_KEYS = ['观点明确', '逻辑清晰', '内容充实', '语言表达', '对策可行'];
+
+      function hide(el) { el.classList.add('hidden'); }
+      function show(el) { el.classList.remove('hidden'); }
+
+      function showError(msg) {
+        hide(loadingEl);
+        errorText.textContent = msg || '加载失败，请稍后重试。';
+        show(errorEl);
+      }
+
+      // ===== 评分评论 =====
+      function getScoreComment(score) {
+        if (score >= 90) return '表现优秀，功底扎实！';
+        if (score >= 80) return '表现良好，继续加油！';
+        if (score >= 70) return '表现一般，还需努力！';
+        if (score >= 60) return '需要加强，多多练习！';
+        return '需要大幅提升，建议系统备考！';
+      }
+
+      // ===== 更新评分环 =====
+      function updateScore(score) {
+        var degrees = Math.round(score * 3.6);
+        // 最低保留 5deg 避免视觉异常
+        if (degrees < 5) degrees = 5;
+        if (degrees > 355) degrees = 355;
+        scoreRing.style.background =
+          'conic-gradient(var(--secondary) 0deg ' + degrees + 'deg, #E5E7EB ' + degrees + 'deg 360deg)';
+        scoreValue.textContent = score;
+        scoreCmnt.textContent = getScoreComment(score);
+      }
+
+      // ===== 更新分项评分 =====
+      function updateDimensions(dims) {
+        dimsCont.innerHTML = '';
+        DIM_KEYS.forEach(function (key, i) {
+          var val = dims[key];
+          if (val == null) return;
+          var pct = Math.round(val / 10 * 100);
+          var isLast = i === DIM_KEYS.length - 1;
+
+          var item = document.createElement('div');
+          item.className = 'dimension-item';
+          if (isLast) item.style.borderBottom = 'none';
+
+          item.innerHTML =
+            '<span>' + key + '</span>' +
+            '<div style="display:flex;align-items:center;gap:8px;">' +
+              '<div class="dimension-bar"><div class="dimension-bar-fill" style="width:' + pct + '%;"></div></div>' +
+              '<span style="font-size:12px;font-weight:600;">' + val.toFixed(1) + '</span>' +
+            '</div>';
+
+          dimsCont.appendChild(item);
+        });
+        show(dimsCard);
+      }
+
+      // ===== 更新参考答案段落（支持打字机效果） =====
+      var prevSectionTexts = {};
+
+      function updateSections(sectionsData) {
+        var hasAny = false;
+        Object.keys(sections).forEach(function (key) {
+          var val = sectionsData[key];
+          if (!val) return;
+          var info = sections[key];
+          var prev = prevSectionTexts[key] || '';
+          // 只在内容变长时更新
+          if (val.length > prev.length) {
+            info.text.textContent = val;
+            prevSectionTexts[key] = val;
+            // 光标闪烁效果：在完整段落前加光标
+            // 如果该段尚未收尾（API 仍在输出），不额外处理
+          }
+          if (!info.el.classList.contains('hidden')) return;
+          show(info.el);
+          hasAny = true;
+        });
+        if (hasAny) {
+          show(ansCard);
+          hide(loadingEl);
+        }
+      }
+
+      // ===== 尝试解析累积的 JSON =====
+      function tryParseAndRender(jsonStr) {
+        try {
+          var data = JSON.parse(jsonStr);
+          // 有 score 字段即认为解析成功
+          if (data.score != null) {
+            hide(loadingEl);
+            show(scoreCard);
+            updateScore(data.score);
+          }
+          if (data.beat_percent != null) {
+            beatEl.textContent = '击败了 ' + data.beat_percent + '% 的考生';
+          }
+          if (data.dimensions) {
+            updateDimensions(data.dimensions);
+          }
+          if (data.sections) {
+            updateSections(data.sections);
+            show(navBtns);
+          }
+        } catch (e) {
+          // JSON 尚未完整，继续累积
+        }
+      }
+
+      // ===== 主体：调用 API =====
+      async function loadAnswer() {
+        var question  = localStorage.getItem('currentQuestionContent');
+        var userAnswer = localStorage.getItem('lastAnswer');
+
+        if (!question) {
+          showError('未找到题目信息，请先从题库选择题目。');
+          return;
+        }
+
+        try {
+          var resp = await fetch('/api/generate-answer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              question: question,
+              userAnswer: userAnswer || '',
+            }),
+          });
+
+          if (!resp.ok) {
+            var errData;
+            try { errData = await resp.json(); } catch (e) {}
+            showError(errData && errData.error ? errData.error : '请求失败 (' + resp.status + ')');
+            return;
+          }
+
+          var reader = resp.body.getReader();
+          var decoder = new TextDecoder();
+          var buf = '';
+          var jsonBuf = '';
+
+          while (true) {
+            var result = await reader.read();
+            if (result.done) break;
+            buf += decoder.decode(result.value, { stream: true });
+
+            // 按行解析 SSE
+            var lines = buf.split('\n');
+            buf = lines.pop() || '';
+
+            for (var i = 0; i < lines.length; i++) {
+              var line = lines[i].trim();
+              if (!line || line === 'data: [DONE]') continue;
+              if (line.startsWith('data: ')) {
+                try {
+                  var parsed = JSON.parse(line.slice(6));
+                  if (parsed.content != null) {
+                    jsonBuf += parsed.content;
+                    tryParseAndRender(jsonBuf);
+                  }
+                } catch (e) { /* 跳过单个 event 解析失败 */ }
+              }
+            }
+          }
+
+          // 处理 buffer 中剩余内容
+          if (buf.trim()) {
+            var rest = buf.trim();
+            if (rest.startsWith('data: ')) {
+              try {
+                var parsed = JSON.parse(rest.slice(6));
+                if (parsed.content != null) jsonBuf += parsed.content;
+              } catch (e) {}
+            }
+          }
+
+          // 最终渲染
+          tryParseAndRender(jsonBuf);
+
+          // 如果一直没有数据，显示错误
+          if (!jsonBuf) {
+            showError('API 返回为空，请稍后重试。');
+          }
+
+        } catch (err) {
+          console.error('API 调用失败:', err);
+          showError('网络请求失败，请检查服务器是否运行。');
+        }
+      }
+
+      // ===== 启动 =====
+      loadAnswer();
+    })();
+  </script>
+</body>
+</html>

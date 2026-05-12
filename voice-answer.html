@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>语音答题 - 河北省公务员面试</title>
+  <link rel="stylesheet" href="css/shared.css">
+  <style>
+    body { padding-top: 0; }
+    .answer-header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      max-width: 390px;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+    }
+    .answer-content {
+      padding: 16px;
+      padding-top: 72px;
+      padding-bottom: 140px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .voice-btn-wrap {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: #EBF0FF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 40px 0 24px;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+    }
+    .voice-btn-wrap.recording {
+      background: #FDEDEC;
+      box-shadow: 0 0 0 12px rgba(231, 76, 60, 0.15);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 12px rgba(231, 76, 60, 0.1); }
+      50% { box-shadow: 0 0 0 24px rgba(231, 76, 60, 0.05); }
+    }
+    .voice-btn-wrap.recording .voice-icon {
+      font-size: 48px;
+    }
+    .voice-btn-wrap:not(.recording) .voice-icon {
+      font-size: 48px;
+    }
+    .voice-status {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .voice-tip {
+      font-size: 13px;
+      color: var(--text-sub);
+      text-align: center;
+      line-height: 1.6;
+    }
+    .voice-wave {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 40px;
+      margin: 16px 0;
+    }
+    .voice-wave span {
+      width: 4px;
+      background: var(--secondary);
+      border-radius: 4px;
+      animation: wave 0.8s ease-in-out infinite;
+    }
+    .voice-wave span:nth-child(1) { height: 12px; animation-delay: 0s; }
+    .voice-wave span:nth-child(2) { height: 24px; animation-delay: 0.1s; }
+    .voice-wave span:nth-child(3) { height: 36px; animation-delay: 0.2s; }
+    .voice-wave span:nth-child(4) { height: 20px; animation-delay: 0.3s; }
+    .voice-wave span:nth-child(5) { height: 32px; animation-delay: 0.15s; }
+    @keyframes wave {
+      0%, 100% { transform: scaleY(0.5); }
+      50% { transform: scaleY(1); }
+    }
+    .bottom-actions {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      max-width: 390px;
+      background: var(--card-bg);
+      border-top: 1px solid var(--border);
+      padding: 12px 16px 24px;
+      display: flex;
+      gap: 12px;
+      z-index: 100;
+    }
+    .bottom-actions .btn { flex: 1; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <!-- 顶部：返回 + 计时器 -->
+  <div class="answer-header">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <a href="javascript:history.back()" class="back-btn">←</a>
+      <span style="font-size: 15px; font-weight: 600;">语音答题</span>
+    </div>
+    <div class="timer" id="timer">05:00</div>
+  </div>
+
+  <div class="answer-content">
+    <!-- 题目 -->
+    <div class="card" style="width: 100%; margin-bottom: 12px;">
+      <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+        <span class="tag tag-blue" id="questionTag"></span>
+      </div>
+      <p style="font-size: 14px; line-height: 1.7;" id="questionContent">
+        加载中...
+      </p>
+    </div>
+
+    <!-- 语音录制按钮 -->
+    <div class="voice-btn-wrap" id="voiceBtn" onclick="toggleRecording()">
+      <span class="voice-icon" id="voiceIcon">🎤</span>
+    </div>
+
+    <div class="voice-status" id="voiceStatus">点击开始录音</div>
+
+    <!-- 语音波形动画（录制时显示） -->
+    <div class="voice-wave hidden" id="voiceWave">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+
+    <div class="voice-tip" id="voiceTip">
+      请在一个安静环境中作答<br>
+      点击上方按钮开始录音
+    </div>
+
+    <!-- 预览文字 -->
+    <div class="card hidden" id="previewCard" style="width: 100%; margin-top: 12px;">
+      <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">📝 语音转文字预览</h4>
+      <p style="font-size: 13px; line-height: 1.7; color: var(--text-main);" id="previewText"></p>
+    </div>
+  </div>
+
+  <!-- 底部操作栏 -->
+  <div class="bottom-actions">
+    <button class="btn btn-outline" id="redoBtn" onclick="resetRecording()">重新录制</button>
+    <button class="btn btn-primary" id="submitBtn" onclick="submitVoice()">提交回答</button>
+  </div>
+
+  <script>
+    let timerInterval;
+    let seconds = 300; // 5分钟
+    let isRecording = false;
+    let mediaRecorder = null;
+    let audioChunks = [];
+
+    function startTimer() {
+      timerInterval = setInterval(function () {
+        seconds--;
+        if (seconds <= 0) {
+          clearInterval(timerInterval);
+          document.getElementById('timer').textContent = '00:00';
+          if (isRecording) stopRecording();
+          alert('答题时间到！');
+          submitVoice();
+          return;
+        }
+        const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+        const s = String(seconds % 60).padStart(2, '0');
+        document.getElementById('timer').textContent = m + ':' + s;
+        // 计时器颜色变化
+        var timerEl = document.getElementById('timer');
+        if (seconds <= 60) {
+          timerEl.style.color = '#E74C3C';
+        } else if (seconds <= 120) {
+          timerEl.style.color = '#F4A100';
+        } else {
+          timerEl.style.color = '';
+        }
+      }, 1000);
+    }
+
+    function toggleRecording() {
+      if (isRecording) {
+        stopRecording();
+      } else {
+        startRecording();
+      }
+    }
+
+    function startRecording() {
+      // 使用浏览器语音识别作为轻量级方案
+      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'zh-CN';
+        recognition.continuous = true;
+        recognition.interimResults = true;
+
+        recognition.onstart = function () {
+          isRecording = true;
+          document.getElementById('voiceBtn').classList.add('recording');
+          document.getElementById('voiceStatus').textContent = '正在录音...';
+          document.getElementById('voiceTip').textContent = '请清晰、大声地作答';
+          document.getElementById('voiceWave').classList.remove('hidden');
+        };
+
+        recognition.onresult = function (event) {
+          let transcript = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+          }
+          document.getElementById('previewText').textContent = transcript;
+          document.getElementById('previewCard').classList.remove('hidden');
+          window._voiceTranscript = transcript;
+        };
+
+        recognition.onerror = function () {
+          // 降级：转为文字输入模式提示
+          document.getElementById('voiceStatus').textContent = '语音识别不可用';
+          document.getElementById('voiceTip').textContent = '请使用文字答题模式';
+          isRecording = false;
+          document.getElementById('voiceBtn').classList.remove('recording');
+          document.getElementById('voiceWave').classList.add('hidden');
+        };
+
+        recognition.onend = function () {
+          if (isRecording) {
+            // 如果还在录制状态但识别结束了，重新启动
+            try { recognition.start(); } catch (e) {}
+          }
+        };
+
+        window._recognition = recognition;
+        recognition.start();
+      } else {
+        // 不支持语音识别时提示
+        document.getElementById('voiceStatus').textContent = '当前浏览器不支持语音识别';
+        document.getElementById('voiceTip').textContent = '请使用Chrome浏览器，或切换到文字答题模式';
+      }
+    }
+
+    function stopRecording() {
+      isRecording = false;
+      document.getElementById('voiceBtn').classList.remove('recording');
+      document.getElementById('voiceStatus').textContent = '录音已暂停';
+      document.getElementById('voiceWave').classList.add('hidden');
+      document.getElementById('voiceTip').textContent = '点击"提交回答"完成作答，或点击"重新录制"重录';
+
+      if (window._recognition) {
+        try { window._recognition.stop(); } catch (e) {}
+        window._recognition = null;
+      }
+    }
+
+    function resetRecording() {
+      if (isRecording) stopRecording();
+      if (window._recognition) {
+        try { window._recognition.abort(); } catch (e) {}
+        window._recognition = null;
+      }
+      document.getElementById('previewCard').classList.add('hidden');
+      document.getElementById('previewText').textContent = '';
+      document.getElementById('voiceStatus').textContent = '点击开始录音';
+      document.getElementById('voiceTip').textContent = '请在一个安静环境中作答\n点击上方按钮开始录音';
+      window._voiceTranscript = '';
+    }
+
+    function submitVoice() {
+      clearInterval(timerInterval);
+      if (isRecording) stopRecording();
+
+      const text = window._voiceTranscript || '';
+      if (text.length < 5) {
+        alert('未检测到有效语音内容，请重新录制或切换到文字答题模式。');
+        return;
+      }
+      localStorage.setItem('lastAnswer', text);
+      localStorage.setItem('lastAnswerMode', 'voice');
+      window.location.href = 'ai-answer';
+    }
+
+    // 从 localStorage 读取题目
+    function loadQuestion() {
+      var content = localStorage.getItem('currentQuestionContent');
+      var type = localStorage.getItem('currentQuestionType');
+      if (content) {
+        document.getElementById('questionContent').textContent = content;
+      } else {
+        document.getElementById('questionContent').textContent = '请从题库选择题目';
+      }
+      if (type) {
+        document.getElementById('questionTag').textContent = type;
+      }
+    }
+
+    // 页面加载自动开始计时 + 读取题目
+    window.addEventListener('load', function () {
+      loadQuestion();
+      startTimer();
+    });
+  </script>
+</body>
+</html>

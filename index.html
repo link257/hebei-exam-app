@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>首页 - 河北省公务员面试</title>
+  <link rel="stylesheet" href="css/shared.css">
+</head>
+<body>
+  <div class="page-container">
+    <!-- 顶部横幅 -->
+    <div class="card" style="background: linear-gradient(135deg, var(--primary), #0F2444); color: white; padding: 24px 20px; border-radius: 16px; margin-bottom: 16px;">
+      <p style="font-size: 13px; opacity: 0.7; margin-bottom: 4px;">河北省公务员面试备考</p>
+      <h2 style="font-size: 22px; font-weight: 700;">距省考面试还有</h2>
+      <div style="display: flex; align-items: baseline; gap: 6px; margin: 12px 0;">
+        <span id="countdown-days" style="font-size: 36px; font-weight: 800; color: var(--accent);">--</span>
+        <span style="font-size: 14px; opacity: 0.7;">天</span>
+      </div>
+      <p style="font-size: 13px; opacity: 0.6;">坚持练习，从容上岸</p>
+    </div>
+
+    <!-- 快捷入口 -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+      <a href="simulate-prep.html" class="card" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 20px 16px; cursor: pointer;">
+        <span style="font-size: 28px;">🎯</span>
+        <span style="font-size: 14px; font-weight: 600;">开始模拟</span>
+        <span style="font-size: 11px; color: var(--text-sub);">全真面试流程</span>
+      </a>
+      <a href="question-detail.html" class="card" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 20px 16px; cursor: pointer;">
+        <span style="font-size: 28px;">📝</span>
+        <span style="font-size: 14px; font-weight: 600;">每日一练</span>
+        <span style="font-size: 11px; color: var(--text-sub);">1道精选真题</span>
+      </a>
+    </div>
+
+    <!-- 备考数据 -->
+    <div class="section-title">
+      我的备考
+      <a href="statistics.html" class="more">查看详情 →</a>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;">
+      <div class="card" style="text-align: center; padding: 14px 8px;">
+        <div style="font-size: 24px; font-weight: 700; color: var(--secondary);" id="stat-total">0</div>
+        <div style="font-size: 11px; color: var(--text-sub); margin-top: 4px;">练习总数</div>
+      </div>
+      <div class="card" style="text-align: center; padding: 14px 8px;">
+        <div style="font-size: 24px; font-weight: 700; color: var(--ai-green);" id="stat-days">0</div>
+        <div style="font-size: 11px; color: var(--text-sub); margin-top: 4px;">连续天数</div>
+      </div>
+      <div class="card" style="text-align: center; padding: 14px 8px;">
+        <div style="font-size: 24px; font-weight: 700; color: var(--accent);" id="stat-avg">0.0</div>
+        <div style="font-size: 11px; color: var(--text-sub); margin-top: 4px;">平均分</div>
+      </div>
+    </div>
+
+    <!-- 推荐题目 -->
+    <div class="section-title">
+      热门推荐
+    </div>
+    <a href="question-detail.html" class="card" style="display: block; cursor: pointer;">
+      <div style="display: flex; justify-content: space-between; align-items: start;">
+        <div>
+          <span class="tag tag-blue" style="margin-bottom: 6px;">综合分析</span>
+          <h4 style="font-size: 15px; font-weight: 600; margin: 6px 0 4px;">如何看待基层干部"躺平"现象？</h4>
+          <p style="font-size: 12px; color: var(--text-sub);">2024年河北省考面试真题 · 247人练习</p>
+        </div>
+      </div>
+    </a>
+    <a href="question-detail.html" class="card" style="display: block; cursor: pointer; margin-top: -4px;">
+      <div style="display: flex; justify-content: space-between; align-items: start;">
+        <div>
+          <span class="tag tag-yellow" style="margin-bottom: 6px;">组织管理</span>
+          <h4 style="font-size: 15px; font-weight: 600; margin: 6px 0 4px;">组织一次乡村振兴调研活动</h4>
+          <p style="font-size: 12px; color: var(--text-sub);">2024年河北省考面试真题 · 189人练习</p>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <!-- 底部导航 -->
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item active">
+      <span class="nav-icon">🏠</span>
+      <span>首页</span>
+    </a>
+    <a href="question-bank.html" class="nav-item">
+      <span class="nav-icon">📚</span>
+      <span>题库</span>
+    </a>
+    <a href="simulate-prep.html" class="nav-item">
+      <span class="nav-icon">🎯</span>
+      <span>模拟</span>
+    </a>
+    <a href="record.html" class="nav-item">
+      <span class="nav-icon">📊</span>
+      <span>记录</span>
+    </a>
+    <a href="profile.html" class="nav-item">
+      <span class="nav-icon">👤</span>
+      <span>我的</span>
+    </a>
+  </nav>
+
+  <script>
+    // 倒计时：假设省考面试在 2026年6月6日
+    (function () {
+      const examDate = new Date('2026-06-06T08:00:00');
+      const now = new Date();
+      const diff = Math.max(0, Math.ceil((examDate - now) / (1000 * 60 * 60 * 24)));
+      document.getElementById('countdown-days').textContent = diff;
+    })();
+  </script>
+</body>
+</html>

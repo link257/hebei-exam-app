@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>文字答题 - 河北省公务员面试</title>
+  <link rel="stylesheet" href="css/shared.css">
+  <style>
+    body { padding-top: 0; }
+    .answer-header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      max-width: 390px;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+    }
+    .answer-content {
+      padding: 16px;
+      padding-top: 72px;
+      padding-bottom: 100px;
+      min-height: 100vh;
+    }
+    .bottom-actions {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      max-width: 390px;
+      background: var(--card-bg);
+      border-top: 1px solid var(--border);
+      padding: 12px 16px 24px;
+      display: flex;
+      gap: 12px;
+      z-index: 100;
+    }
+    .bottom-actions .btn { flex: 1; }
+    .word-count {
+      position: absolute;
+      right: 16px;
+      bottom: 12px;
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+    .textarea-wrap {
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+  <!-- 顶部：返回 + 计时器 -->
+  <div class="answer-header">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <a href="javascript:history.back()" class="back-btn">←</a>
+      <span style="font-size: 15px; font-weight: 600;">文字答题</span>
+    </div>
+    <div class="timer" id="timer">05:00</div>
+  </div>
+
+  <div class="answer-content">
+    <!-- 题目 -->
+    <div class="card" style="margin-bottom: 12px;">
+      <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+        <span class="tag tag-blue" id="questionTag"></span>
+      </div>
+      <p style="font-size: 14px; line-height: 1.7;" id="questionContent">
+        加载中...
+      </p>
+    </div>
+
+    <!-- 输入框 -->
+    <div class="card" style="padding: 0; overflow: hidden;">
+      <div class="textarea-wrap">
+        <textarea class="input-field" id="answerInput" placeholder="请输入你的回答..." style="border: none; border-radius: 0; min-height: 320px; padding: 16px;" oninput="updateWordCount()"></textarea>
+        <span class="word-count" id="wordCount">0 字</span>
+      </div>
+    </div>
+
+    <!-- 思考提示 -->
+    <div style="background: #FFF8E8; border-radius: 10px; padding: 12px 14px; font-size: 12px; color: #8B7A3A; line-height: 1.6;">
+      💡 建议：先花 1-2 分钟理清思路，列出要点后再作答。注意条理清晰、层次分明。
+    </div>
+  </div>
+
+  <!-- 底部操作栏 -->
+  <div class="bottom-actions">
+    <button class="btn btn-outline" onclick="clearAnswer()">重写</button>
+    <button class="btn btn-primary" onclick="submitAnswer()">提交回答</button>
+  </div>
+
+  <script>
+    let timerInterval;
+    let seconds = 300; // 5分钟
+
+    function startTimer() {
+      timerInterval = setInterval(function () {
+        seconds--;
+        if (seconds <= 0) {
+          clearInterval(timerInterval);
+          document.getElementById('timer').textContent = '00:00';
+          alert('答题时间到！');
+          submitAnswer();
+          return;
+        }
+        const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+        const s = String(seconds % 60).padStart(2, '0');
+        document.getElementById('timer').textContent = m + ':' + s;
+        // 计时器颜色变化
+        var timerEl = document.getElementById('timer');
+        if (seconds <= 60) {
+          timerEl.style.color = '#E74C3C';
+        } else if (seconds <= 120) {
+          timerEl.style.color = '#F4A100';
+        } else {
+          timerEl.style.color = '';
+        }
+      }, 1000);
+    }
+
+    function updateWordCount() {
+      const text = document.getElementById('answerInput').value;
+      document.getElementById('wordCount').textContent = text.length + ' 字';
+    }
+
+    function clearAnswer() {
+      if (confirm('确定要清空当前回答吗？')) {
+        document.getElementById('answerInput').value = '';
+        updateWordCount();
+      }
+    }
+
+    function submitAnswer() {
+      clearInterval(timerInterval);
+      const text = document.getElementById('answerInput').value.trim();
+      if (text.length < 10) {
+        alert('回答内容过短，请补充后再提交。');
+        seconds++;
+        startTimer();
+        return;
+      }
+      // 保存回答到 localStorage
+      localStorage.setItem('lastAnswer', text);
+      localStorage.setItem('lastAnswerMode', 'text');
+      window.location.href = 'ai-answer';
+    }
+
+    // 从 localStorage 读取题目
+    function loadQuestion() {
+      var content = localStorage.getItem('currentQuestionContent');
+      var type = localStorage.getItem('currentQuestionType');
+      if (content) {
+        document.getElementById('questionContent').textContent = content;
+      } else {
+        document.getElementById('questionContent').textContent = '请从题库选择题目';
+      }
+      if (type) {
+        document.getElementById('questionTag').textContent = type;
+      }
+    }
+
+    // 页面加载自动开始计时 + 读取题目
+    window.addEventListener('load', function () {
+      loadQuestion();
+      startTimer();
+    });
+  </script>
+</body>
+</html>

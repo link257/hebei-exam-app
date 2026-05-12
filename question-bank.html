@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>题库 - 河北省公务员面试</title>
+  <link rel="stylesheet" href="css/shared.css">
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <style>
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      margin-bottom: 16px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .filter-bar::-webkit-scrollbar { display: none; }
+    .filter-chip {
+      flex-shrink: 0;
+      padding: 6px 16px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: var(--card-bg);
+      font-size: 13px;
+      color: var(--text-sub);
+      cursor: pointer;
+      white-space: nowrap;
+      user-select: none;
+      transition: all 0.2s;
+    }
+    .filter-chip.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    .question-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .question-item {
+      display: block;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .question-item:active {
+      opacity: 0.7;
+    }
+    .status-placeholder {
+      text-align: center;
+      padding: 48px 16px;
+      color: var(--text-sub);
+      font-size: 14px;
+    }
+    .type-tag {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .year-tag {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+      background: #E6F9F4;
+      color: #00B894;
+    }
+    .question-content {
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.5;
+      margin-bottom: 6px;
+    }
+    .question-meta {
+      display: flex;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+    .summary-line {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+    <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 4px;">题库</h2>
+    <p class="summary-line" id="summary">加载中...</p>
+
+    <!-- 年份筛选 -->
+    <div class="filter-bar" id="yearFilter">
+      <span class="filter-chip active" data-year="">全部</span>
+      <span class="filter-chip" data-year="2025">2025</span>
+      <span class="filter-chip" data-year="2024">2024</span>
+      <span class="filter-chip" data-year="2023">2023</span>
+      <span class="filter-chip" data-year="2022">2022</span>
+      <span class="filter-chip" data-year="2021">2021</span>
+      <span class="filter-chip" data-year="2020">2020</span>
+    </div>
+
+    <!-- 题型筛选 -->
+    <div class="filter-bar" id="typeFilter">
+      <span class="filter-chip active" data-type="">全部</span>
+      <span class="filter-chip" data-type="综合分析">综合分析</span>
+      <span class="filter-chip" data-type="计划组织">计划组织</span>
+      <span class="filter-chip" data-type="人际关系">人际关系</span>
+      <span class="filter-chip" data-type="情景应变">情景应变</span>
+      <span class="filter-chip" data-type="自我认知">自我认知</span>
+    </div>
+
+    <!-- 搜索框 -->
+    <div style="margin-bottom: 16px;">
+      <input type="text" class="input-field" id="searchInput" placeholder="搜索题目关键词..." style="min-height: auto;">
+    </div>
+
+    <!-- 题目列表 -->
+    <div class="question-list" id="questionList">
+      <div class="status-placeholder" id="statusMessage">加载中...</div>
+    </div>
+  </div>
+
+  <!-- 底部导航 -->
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item">
+      <span class="nav-icon">🏠</span>
+      <span>首页</span>
+    </a>
+    <a href="question-bank.html" class="nav-item active">
+      <span class="nav-icon">📚</span>
+      <span>题库</span>
+    </a>
+    <a href="simulate-prep.html" class="nav-item">
+      <span class="nav-icon">🎯</span>
+      <span>模拟</span>
+    </a>
+    <a href="record.html" class="nav-item">
+      <span class="nav-icon">📊</span>
+      <span>记录</span>
+    </a>
+    <a href="profile.html" class="nav-item">
+      <span class="nav-icon">👤</span>
+      <span>我的</span>
+    </a>
+  </nav>
+
+  <script>
+    (function () {
+      // ---- 题型配色映射 ----
+      var TYPE_STYLES = {
+        '综合分析': { bg: '#EBF3FF', color: '#2D6BE4' },
+        '计划组织': { bg: '#E8F8F0', color: '#00A86B' },
+        '人际关系': { bg: '#FFF3E0', color: '#F57C00' },
+        '情景应变': { bg: '#FEE8E8', color: '#C62828' },
+        '自我认知': { bg: '#F3E8FF', color: '#7B1FA2' },
+      };
+
+      // ---- 状态变量 ----
+      var currentYear = '';
+      var currentType = '';
+      var allQuestions = [];
+
+      // ---- DOM 引用 ----
+      var listEl      = document.getElementById('questionList');
+      var summaryEl   = document.getElementById('summary');
+      var statusEl    = document.getElementById('statusMessage');
+      var searchInput = document.getElementById('searchInput');
+      var yearChips   = document.querySelectorAll('#yearFilter .filter-chip');
+      var typeChips   = document.querySelectorAll('#typeFilter .filter-chip');
+
+      // ---- 渲染函数 ----
+      function renderStars(difficulty) {
+        var num = parseInt(difficulty, 10) || 3;
+        var full = '';
+        for (var i = 0; i < num; i++) full += '★';
+        var empty = '';
+        for (var i = num; i < 5; i++) empty += '☆';
+        return '难度 ' + full + empty;
+      }
+
+      function truncate(text, max) {
+        if (!text) return '';
+        return text.length > max ? text.slice(0, max) + '...' : text;
+      }
+
+      function getTypeStyle(type) {
+        return TYPE_STYLES[type] || { bg: '#F0F0F0', color: '#666' };
+      }
+
+      function render() {
+        // 过滤
+        var filtered = allQuestions;
+        if (currentYear) {
+          filtered = filtered.filter(function (q) { return String(q.year) === currentYear; });
+        }
+        if (currentType) {
+          filtered = filtered.filter(function (q) { return q.question_type === currentType; });
+        }
+        // 关键词过滤
+        var keyword = searchInput.value.trim();
+        if (keyword) {
+          filtered = filtered.filter(function (q) {
+            return (q.content && q.content.indexOf(keyword) !== -1);
+          });
+        }
+
+        // 更新摘要
+        summaryEl.textContent = '共 ' + filtered.length + ' 道河北省考面试真题';
+
+        // 清空列表
+        listEl.innerHTML = '';
+
+        if (filtered.length === 0) {
+          var emptyEl = document.createElement('div');
+          emptyEl.className = 'status-placeholder';
+          emptyEl.textContent = '暂无匹配题目';
+          listEl.appendChild(emptyEl);
+          return;
+        }
+
+        // 渲染每一项
+        for (var i = 0; i < filtered.length; i++) {
+          var q = filtered[i];
+          var ts = getTypeStyle(q.question_type);
+
+          var link = document.createElement('a');
+          link.className = 'card question-item';
+          link.href = 'question-detail?id=' + q.id;
+
+          var html = '';
+          html += '<div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;">';
+          html += '<span class="type-tag" style="background:' + ts.bg + ';color:' + ts.color + ';">'
+            + escapeHtml(q.question_type) + '</span>';
+          html += '<span class="year-tag">' + escapeHtml(String(q.year)) + '年真题</span>';
+          html += '</div>';
+          html += '<div class="question-content">' + (i + 1) + '. ' + escapeHtml(truncate(q.content, 50)) + '</div>';
+          html += '<div class="question-meta"><span>' + renderStars(q.difficulty) + '</span></div>';
+
+          link.innerHTML = html;
+          listEl.appendChild(link);
+        }
+      }
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+      }
+
+      // ---- 数据加载 ----
+      function loadData() {
+        statusEl.style.display = '';
+        statusEl.textContent = '加载中...';
+        // 清除已有列表项，保留状态消息
+        var children = listEl.children;
+        for (var j = children.length - 1; j >= 0; j--) {
+          if (children[j] !== statusEl) {
+            listEl.removeChild(children[j]);
+          }
+        }
+
+        SUPABASE.fetchQuestions()
+          .then(function (data) {
+            allQuestions = data || [];
+            statusEl.style.display = 'none';
+            render();
+          })
+          .catch(function (err) {
+            console.error('加载题目失败:', err);
+            statusEl.style.display = '';
+            statusEl.textContent = '加载失败，请检查网络';
+            summaryEl.textContent = '';
+          });
+      }
+
+      // ---- 筛选切换 ----
+      function setActive(chips, value, attr) {
+        for (var i = 0; i < chips.length; i++) {
+          var chip = chips[i];
+          if (chip.getAttribute(attr) === value) {
+            chip.classList.add('active');
+          } else {
+            chip.classList.remove('active');
+          }
+        }
+      }
+
+      function setupFilters() {
+        // 年份
+        for (var i = 0; i < yearChips.length; i++) {
+          yearChips[i].addEventListener('click', function () {
+            var year = this.getAttribute('data-year') || '';
+            if (year === currentYear) return;
+            currentYear = year;
+            setActive(yearChips, year, 'data-year');
+            render();
+          });
+        }
+
+        // 题型
+        for (var i = 0; i < typeChips.length; i++) {
+          typeChips[i].addEventListener('click', function () {
+            var type = this.getAttribute('data-type') || '';
+            if (type === currentType) return;
+            currentType = type;
+            setActive(typeChips, type, 'data-type');
+            render();
+          });
+        }
+      }
+
+      // ---- 搜索防抖 ----
+      var searchTimer = null;
+      searchInput.addEventListener('input', function () {
+        if (searchTimer) clearTimeout(searchTimer);
+        searchTimer = setTimeout(function () {
+          searchTimer = null;
+          render();
+        }, 300);
+      });
+
+      // ---- 启动 ----
+      setupFilters();
+      loadData();
+    })();
+  </script>
+</body>
+</html>

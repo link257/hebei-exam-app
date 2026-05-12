@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>个人中心 - 河北省公务员面试</title>
+  <link rel="stylesheet" href="css/shared.css">
+</head>
+<body>
+  <div class="page-container">
+    <!-- 用户头像和信息 -->
+    <div class="card" style="display: flex; align-items: center; gap: 16px; padding: 20px; margin-bottom: 16px;">
+      <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; font-size: 28px; color: white; font-weight: 700;">
+        考
+      </div>
+      <div style="flex:1;">
+        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">面试考生</h3>
+        <p style="font-size: 13px; color: var(--text-sub);">已练习 36 题 · 连续 7 天</p>
+      </div>
+      <span style="font-size: 18px; color: var(--text-sub);">＞</span>
+    </div>
+
+    <!-- 备考统计入口 -->
+    <div class="section-title">
+      备考数据
+      <a href="statistics.html" class="more">查看详情 →</a>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
+      <div class="card" style="text-align: center; padding: 14px 8px;">
+        <div style="font-size: 24px; font-weight: 700; color: var(--secondary);">36</div>
+        <div style="font-size: 11px; color: var(--text-sub); margin-top: 4px;">练习总数</div>
+      </div>
+      <div class="card" style="text-align: center; padding: 14px 8px;">
+        <div style="font-size: 24px; font-weight: 700; color: var(--ai-green);">82</div>
+        <div style="font-size: 11px; color: var(--text-sub); margin-top: 4px;">最高分</div>
+      </div>
+      <div class="card" style="text-align: center; padding: 14px 8px;">
+        <div style="font-size: 24px; font-weight: 700; color: var(--accent);">7</div>
+        <div style="font-size: 11px; color: var(--text-sub); margin-top: 4px;">连续天数</div>
+      </div>
+    </div>
+
+    <!-- 功能菜单 -->
+    <div class="section-title">功能设置</div>
+    <div class="card" style="padding: 0; overflow: hidden;">
+      <a href="statistics.html" style="display: flex; align-items: center; justify-content: space-between; padding: 16px; border-bottom: 1px solid var(--border);">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 18px;">📊</span>
+          <span style="font-size: 14px;">备考统计</span>
+        </div>
+        <span style="font-size: 14px; color: var(--text-sub);">＞</span>
+      </a>
+      <a href="record.html" style="display: flex; align-items: center; justify-content: space-between; padding: 16px; border-bottom: 1px solid var(--border);">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 18px;">📝</span>
+          <span style="font-size: 14px;">练习记录</span>
+        </div>
+        <span style="font-size: 14px; color: var(--text-sub);">＞</span>
+      </a>
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px; border-bottom: 1px solid var(--border);">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 18px;">🔔</span>
+          <span style="font-size: 14px;">每日提醒</span>
+        </div>
+        <label style="width: 44px; height: 24px; background: var(--secondary); border-radius: 24px; position: relative; cursor: pointer;">
+          <input type="checkbox" checked style="opacity: 0; width: 0; height: 0;">
+          <span style="position: absolute; top: 2px; left: 22px; width: 20px; height: 20px; border-radius: 50%; background: white; transition: 0.2s;"></span>
+        </label>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 18px;">🌙</span>
+          <span style="font-size: 14px;">深色模式</span>
+        </div>
+        <label style="width: 44px; height: 24px; background: #E5E7EB; border-radius: 24px; position: relative; cursor: pointer;">
+          <input type="checkbox" style="opacity: 0; width: 0; height: 0;">
+          <span style="position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: white; transition: 0.2s;"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- 关于 -->
+    <div class="section-title mt-16">关于</div>
+    <div class="card" style="padding: 0; overflow: hidden;">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px; border-bottom: 1px solid var(--border);">
+        <span style="font-size: 14px;">版本号</span>
+        <span style="font-size: 13px; color: var(--text-sub);">v1.0.0</span>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px;">
+        <span style="font-size: 14px;">数据来源</span>
+        <span style="font-size: 13px; color: var(--text-sub);">河北省考历年真题</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部导航 -->
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item">
+      <span class="nav-icon">🏠</span>
+      <span>首页</span>
+    </a>
+    <a href="question-bank.html" class="nav-item">
+      <span class="nav-icon">📚</span>
+      <span>题库</span>
+    </a>
+    <a href="simulate-prep.html" class="nav-item">
+      <span class="nav-icon">🎯</span>
+      <span>模拟</span>
+    </a>
+    <a href="record.html" class="nav-item">
+      <span class="nav-icon">📊</span>
+      <span>记录</span>
+    </a>
+    <a href="profile.html" class="nav-item active">
+      <span class="nav-icon">👤</span>
+      <span>我的</span>
+    </a>
+  </nav>
+</body>
+</html>
