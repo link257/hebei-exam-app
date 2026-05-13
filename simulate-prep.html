@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>模拟准备 - 河北省公务员面试</title>
   <link rel="stylesheet" href="css/shared.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1A3A6B">
 </head>
 <body>
   <div class="top-bar">
@@ -102,5 +104,10 @@
       <span>我的</span>
     </a>
   </nav>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js');
+    }
+  </script>
 </body>
 </html>
