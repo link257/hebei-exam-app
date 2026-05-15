@@ -1,8 +1,10 @@
-const CACHE_NAME = 'hebei-exam-v1';
+const CACHE_NAME = 'hebei-exam-v2';
 
 const PRECACHE_URLS = [
   '/index.html',
   '/splash.html',
+  '/login.html',
+  '/register.html',
   '/simulate-prep.html',
   '/question-bank.html',
   '/question-detail.html',
@@ -15,7 +17,9 @@ const PRECACHE_URLS = [
   '/ai-answer.html',
   '/css/shared.css',
   '/js/config.js',
-  '/js/supabase.js'
+  '/js/supabase.js',
+  '/js/auth-guard.js',
+  '/js/auth.js'
 ];
 
 self.addEventListener('install', event => {
@@ -48,6 +52,12 @@ self.addEventListener('fetch', event => {
 
   // For API calls (Supabase), use network-first
   if (url.hostname === 'supabase.co' || url.pathname.startsWith('/api/')) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  // For HTML pages, use network-first (always get latest)
+  if (url.pathname.endsWith('.html') || url.pathname === '/') {
     event.respondWith(networkFirst(request));
     return;
   }
