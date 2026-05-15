@@ -12,6 +12,14 @@ const AUTH = (() => {
     if (typeof supabase === 'undefined') {
       throw new Error('请先加载 @supabase/supabase-js');
     }
+    if (!CONFIG.SUPABASE_URL) {
+      console.error('[auth] SUPABASE_URL 为空，服务端可能缺少环境变量');
+      throw new Error('服务端配置异常，请联系管理员');
+    }
+    if (!CONFIG.SUPABASE_ANON_KEY) {
+      console.error('[auth] SUPABASE_ANON_KEY 为空');
+      throw new Error('服务端配置异常，请联系管理员');
+    }
     client = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY, {
       auth: { autoRefreshToken: true, persistSession: true },
     });

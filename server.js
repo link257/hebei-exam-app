@@ -18,6 +18,26 @@ app.use(cors());
 app.use(express.json());
 
 // ============================================================
+//  配置注入中间件 — 在 HTML 响应中注入 __ENV__
+// ============================================================
+const ENV_SCRIPT = `<script>window.__ENV__ = ${JSON.stringify({
+  SUPABASE_URL: process.env.SUPABASE_URL || '',
+  SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || '',
+})};</script>`;
+
+function injectEnv(req, res, next) {
+  const original = res.send;
+  res.send = function (body) {
+    if (body && typeof body === 'string' && res.get('Content-Type')?.startsWith('text/html')) {
+      body = body.replace('</head>', ENV_SCRIPT + '</head>');
+    }
+    return original.call(this, body);
+  };
+  next();
+}
+app.use(injectEnv);
+
+// ============================================================
 //  API 路由（放在静态文件路由之前）
 // ============================================================
 
