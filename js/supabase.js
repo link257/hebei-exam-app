@@ -7,14 +7,21 @@
  *   const q = await SUPABASE.fetchQuestionById(1);
  */
 const SUPABASE = (() => {
-  const BASE_URL = CONFIG.SUPABASE_URL.replace(/\/+$/, '');
-  const API_KEY  = CONFIG.SUPABASE_KEY;
+  let BASE_URL, API_KEY;
+
+  async function ensureConfig() {
+    if (BASE_URL && API_KEY) return;
+    await CONFIG_PROMISE;
+    BASE_URL = CONFIG.SUPABASE_URL.replace(/\/+$/, '');
+    API_KEY  = CONFIG.SUPABASE_ANON_KEY;
+  }
 
   /**
    * 对 Supabase REST API 发起 GET 请求
    * @param {string} path - 请求路径（如 'questions?select=id&year=eq.2024'）
    */
   async function request(path) {
+    await ensureConfig();
     const url = BASE_URL + '/rest/v1/' + path.replace(/^\//, '');
     const res = await fetch(url, {
       method: 'GET',

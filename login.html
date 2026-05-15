@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>登录 - 河北省公务员面试</title>
+  <link rel="stylesheet" href="css/shared.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1A3A6B">
+  <style>
+    .auth-page {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 32px 24px;
+    }
+    .auth-logo {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .auth-logo h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .auth-logo p {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-top: 6px;
+    }
+    .auth-error {
+      background: #FDEDEC;
+      color: var(--danger);
+      font-size: 13px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .auth-footer {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-top: 24px;
+    }
+    .auth-footer a {
+      color: var(--secondary);
+      font-weight: 500;
+    }
+    .btn-loading {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-logo">
+      <h1>河北省公务员面试</h1>
+      <p>登录以同步你的备考数据</p>
+    </div>
+
+    <div class="auth-error" id="errorMsg"></div>
+
+    <form id="loginForm">
+      <div class="input-group">
+        <label for="email">邮箱</label>
+        <input type="email" id="email" class="input-field" placeholder="请输入邮箱" required autocomplete="email">
+      </div>
+      <div class="input-group">
+        <label for="password">密码</label>
+        <input type="password" id="password" class="input-field" placeholder="请输入密码" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn btn-primary mt-8" id="loginBtn">登 录</button>
+    </form>
+
+    <div class="auth-footer">
+      还没有账号？<a href="register.html">立即注册</a>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    (async function() {
+      try { if (await AUTH.getCurrentUser()) window.location.replace('index.html'); } catch(e) {}
+    })();
+  </script>
+  <script>
+    const form = document.getElementById('loginForm');
+    const btn = document.getElementById('loginBtn');
+    const errorEl = document.getElementById('errorMsg');
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorEl.style.display = 'none';
+      btn.classList.add('btn-loading');
+      btn.textContent = '登录中...';
+
+      try {
+        await AUTH.login(email.value.trim(), password.value);
+        window.location.href = 'index.html';
+      } catch (err) {
+        errorEl.style.display = 'block';
+        if (err.message === 'Invalid login credentials') {
+          errorEl.textContent = '邮箱或密码错误，请重试';
+        } else if (err.message.includes('Email not confirmed')) {
+          errorEl.textContent = '请先验证邮箱，然后再登录';
+        } else {
+          errorEl.textContent = '登录失败：' + err.message;
+        }
+        btn.classList.remove('btn-loading');
+        btn.textContent = '登 录';
+      }
+    });
+  </script>
+</body>
+</html>

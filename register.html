@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>注册 - 河北省公务员面试</title>
+  <link rel="stylesheet" href="css/shared.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1A3A6B">
+  <style>
+    .auth-page {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 32px 24px;
+    }
+    .auth-logo {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .auth-logo h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .auth-logo p {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-top: 6px;
+    }
+    .auth-error {
+      background: #FDEDEC;
+      color: var(--danger);
+      font-size: 13px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .auth-success {
+      background: #E6F9F4;
+      color: var(--ai-green);
+      font-size: 13px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .auth-footer {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-top: 24px;
+    }
+    .auth-footer a {
+      color: var(--secondary);
+      font-weight: 500;
+    }
+    .btn-loading {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-logo">
+      <h1>创建账号</h1>
+      <p>注册后即可享受完整备考功能</p>
+    </div>
+
+    <div class="auth-error" id="errorMsg"></div>
+    <div class="auth-success" id="successMsg"></div>
+
+    <form id="registerForm">
+      <div class="input-group">
+        <label for="email">邮箱</label>
+        <input type="email" id="email" class="input-field" placeholder="请输入邮箱" required autocomplete="email">
+      </div>
+      <div class="input-group">
+        <label for="password">密码</label>
+        <input type="password" id="password" class="input-field" placeholder="至少 6 位密码" required minlength="6" autocomplete="new-password">
+      </div>
+      <div class="input-group">
+        <label for="confirm">确认密码</label>
+        <input type="password" id="confirm" class="input-field" placeholder="再次输入密码" required minlength="6" autocomplete="new-password">
+      </div>
+      <button type="submit" class="btn btn-primary mt-8" id="registerBtn">注 册</button>
+    </form>
+
+    <div class="auth-footer">
+      已有账号？<a href="login.html">立即登录</a>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    (async function() {
+      try { if (await AUTH.getCurrentUser()) window.location.replace('index.html'); } catch(e) {}
+    })();
+  </script>
+  <script>
+    const form = document.getElementById('registerForm');
+    const btn = document.getElementById('registerBtn');
+    const errorEl = document.getElementById('errorMsg');
+    const successEl = document.getElementById('successMsg');
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const confirm = document.getElementById('confirm');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorEl.style.display = 'none';
+      successEl.style.display = 'none';
+
+      if (password.value !== confirm.value) {
+        errorEl.style.display = 'block';
+        errorEl.textContent = '两次输入的密码不一致';
+        return;
+      }
+
+      btn.classList.add('btn-loading');
+      btn.textContent = '注册中...';
+
+      try {
+        const result = await AUTH.register(email.value.trim(), password.value);
+        // 如果自动确认登录，则直接跳转
+        if (result.session) {
+          window.location.href = 'index.html';
+        } else {
+          // 需要邮箱验证
+          successEl.style.display = 'block';
+          successEl.textContent = '注册成功！请检查邮箱完成验证，然后登录。';
+          form.reset();
+          btn.classList.remove('btn-loading');
+          btn.textContent = '注 册';
+        }
+      } catch (err) {
+        errorEl.style.display = 'block';
+        if (err.message === 'User already registered') {
+          errorEl.textContent = '该邮箱已被注册，请直接登录';
+        } else {
+          errorEl.textContent = '注册失败：' + err.message;
+        }
+        btn.classList.remove('btn-loading');
+        btn.textContent = '注 册';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="css/shared.css">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#1A3A6B">
+  <script src="js/config.js"></script>
 </head>
 <body>
   <div class="page-container">
@@ -16,29 +17,24 @@
         考
       </div>
       <div style="flex:1;">
-        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">面试考生</h3>
-        <p style="font-size: 13px; color: var(--text-sub);">已练习 36 题 · 连续 7 天</p>
+        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 4px;" id="profileName">面试考生</h3>
+        <p style="font-size: 13px; color: var(--text-sub);" id="profileEmail"></p>
       </div>
-      <span style="font-size: 18px; color: var(--text-sub);">＞</span>
+      <span id="vipBadge"></span>
     </div>
 
-    <!-- 备考统计入口 -->
+    <!-- AI 配额和 VIP -->
     <div class="section-title">
-      备考数据
-      <a href="statistics.html" class="more">查看详情 →</a>
+      会员与配额
     </div>
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px;">
       <div class="card" style="text-align: center; padding: 14px 8px;">
-        <div style="font-size: 24px; font-weight: 700; color: var(--secondary);">36</div>
-        <div style="font-size: 11px; color: var(--text-sub); margin-top: 4px;">练习总数</div>
+        <div style="font-size: 24px; font-weight: 700; color: var(--secondary);" id="aiQuotaUsed">-</div>
+        <div style="font-size: 11px; color: var(--text-sub); margin-top: 4px;">AI 批改已用次数</div>
       </div>
       <div class="card" style="text-align: center; padding: 14px 8px;">
-        <div style="font-size: 24px; font-weight: 700; color: var(--ai-green);">82</div>
-        <div style="font-size: 11px; color: var(--text-sub); margin-top: 4px;">最高分</div>
-      </div>
-      <div class="card" style="text-align: center; padding: 14px 8px;">
-        <div style="font-size: 24px; font-weight: 700; color: var(--accent);">7</div>
-        <div style="font-size: 11px; color: var(--text-sub); margin-top: 4px;">连续天数</div>
+        <div style="font-size: 24px; font-weight: 700; color: var(--accent);" id="vipExpire">-</div>
+        <div style="font-size: 11px; color: var(--text-sub); margin-top: 4px;">会员到期</div>
       </div>
     </div>
 
@@ -79,6 +75,13 @@
           <span style="position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: white; transition: 0.2s;"></span>
         </label>
       </div>
+      <div id="logoutItem" style="display: flex; align-items: center; justify-content: space-between; padding: 16px; cursor: pointer; border-top: 1px solid var(--border);" onclick="handleLogout()">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 18px;">🚪</span>
+          <span style="font-size: 14px; color: var(--danger);">退出登录</span>
+        </div>
+        <span style="font-size: 14px; color: var(--text-sub);">＞</span>
+      </div>
     </div>
 
     <!-- 关于 -->
@@ -118,6 +121,49 @@
       <span>我的</span>
     </a>
   </nav>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    async function handleLogout() {
+      await AUTH.logout();
+      window.location.href = 'login.html';
+    }
+
+    (async function initProfile() {
+      try {
+        const user = await AUTH.getCurrentUser();
+        if (!user) {
+          window.location.href = 'login.html';
+          return;
+        }
+
+        // 显示用户邮箱
+        document.getElementById('profileName').textContent = user.email?.split('@')[0] || '面试考生';
+        document.getElementById('profileEmail').textContent = user.email || '';
+
+        // 获取 user_profiles 数据
+        const profile = await AUTH.getUserProfile(user.id);
+
+        // AI 批改配额
+        document.getElementById('aiQuotaUsed').textContent = profile.ai_quota_used ?? 0;
+
+        // VIP 状态
+        const vipBadge = document.getElementById('vipBadge');
+        if (profile.is_vip) {
+          vipBadge.innerHTML = '<span class="tag tag-yellow" style="font-size: 12px;">VIP</span>';
+          const expire = profile.vip_expire_at ? new Date(profile.vip_expire_at) : null;
+          document.getElementById('vipExpire').textContent = expire
+            ? expire.toLocaleDateString('zh-CN')
+            : '永久';
+        } else {
+          vipBadge.innerHTML = '<span class="tag tag-blue" style="font-size: 12px;">普通用户</span>';
+          document.getElementById('vipExpire').textContent = '未开通';
+        }
+      } catch (err) {
+        console.error('个人中心加载失败:', err);
+      }
+    })();
+  </script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js');

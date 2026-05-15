@@ -26,6 +26,14 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
+// 前端配置（从 .env 安全注入）
+app.get('/api/config', (req, res) => {
+  res.json({
+    SUPABASE_URL: process.env.SUPABASE_URL,
+    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
+  });
+});
+
 // 生成参考答案（流式 SSE）
 app.post('/api/generate-answer', async (req, res) => {
   const { question, userAnswer } = req.body;
