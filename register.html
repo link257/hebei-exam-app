@@ -129,13 +129,19 @@
 
       try {
         const result = await AUTH.register(email.value.trim(), password.value);
-        // 如果自动确认登录，则直接跳转
+        // 有 session 直接进入
         if (result.session) {
           window.location.href = 'index.html';
-        } else {
-          // 需要邮箱验证
+          return;
+        }
+        // 无 session（邮箱验证开启时），尝试直接登录
+        try {
+          await AUTH.login(email.value.trim(), password.value);
+          window.location.href = 'index.html';
+        } catch (loginErr) {
+          // 登录失败，提示用户去关邮箱验证或登录
           successEl.style.display = 'block';
-          successEl.textContent = '注册成功！请检查邮箱完成验证，然后登录。';
+          successEl.innerHTML = '注册成功！请前往 Supabase 后台关闭邮箱验证，然后<a href="login.html" style="color:var(--secondary);font-weight:500;">去登录</a>。';
           form.reset();
           btn.classList.remove('btn-loading');
           btn.textContent = '注 册';
