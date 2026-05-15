@@ -12,6 +12,11 @@
   );
   try {
     await CONFIG_PROMISE;
+    if (!CONFIG.SUPABASE_URL) {
+      // 配置未加载（如 Railway 缺少环境变量），仍跳转登录页
+      window.location.replace('login.html');
+      return;
+    }
     const c = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
     const { data: { session } } = await c.auth.getSession();
     if (!session) {
@@ -20,6 +25,7 @@
     }
   } catch (e) {
     console.error('Auth guard error:', e);
+    window.location.replace('login.html');
   }
   document.getElementById(overlayId)?.remove();
 })();
