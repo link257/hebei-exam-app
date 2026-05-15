@@ -26,12 +26,15 @@ const ENV_SCRIPT = `<script>window.__ENV__ = ${JSON.stringify({
 })};</script>`;
 
 function injectEnv(req, res, next) {
-  const original = res.send;
-  res.send = function (body) {
-    if (body && typeof body === 'string' && res.get('Content-Type')?.startsWith('text/html')) {
-      body = body.replace('</head>', ENV_SCRIPT + '</head>');
+  const original = res.sendFile.bind(res);
+  res.sendFile = function (path2, opts, cb) {
+    if (typeof path2 === 'string' && path2.endsWith('.html')) {
+      const content = fs.readFileSync(path2, 'utf8');
+      var injected = content.replace('</head>', ENV_SCRIPT + '</head>');
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.send(injected);
     }
-    return original.call(this, body);
+    return original(path2, opts, cb);
   };
   next();
 }
