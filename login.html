@@ -84,8 +84,10 @@
   <script src="js/config.js"></script>
   <script src="js/auth.js"></script>
   <script>
-    (async function() {
-      try { if (await AUTH.getCurrentUser()) window.location.replace('index.html'); } catch(e) {}
+    (function() {
+      if (Object.keys(localStorage).some(function(k){return k.startsWith('sb-')&&k.endsWith('-auth-token')})) {
+        window.location.replace('index.html');
+      }
     })();
   </script>
   <script>
