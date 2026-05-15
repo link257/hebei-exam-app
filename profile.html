@@ -29,8 +29,9 @@
     </div>
     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px;">
       <div class="card" style="text-align: center; padding: 14px 8px;">
+        <!-- AI 批改配额 -->
         <div style="font-size: 24px; font-weight: 700; color: var(--secondary);" id="aiQuotaUsed">-</div>
-        <div style="font-size: 11px; color: var(--text-sub); margin-top: 4px;">AI 批改已用次数</div>
+        <div style="font-size: 11px; color: var(--text-sub); margin-top: 4px;">今日已用额度</div>
       </div>
       <div class="card" style="text-align: center; padding: 14px 8px;">
         <div style="font-size: 24px; font-weight: 700; color: var(--accent);" id="vipExpire">-</div>
@@ -145,16 +146,17 @@
         const profile = await AUTH.getUserProfile(user.id);
 
         // AI 批改配额
-        document.getElementById('aiQuotaUsed').textContent = profile.ai_quota_used ?? 0;
+        var quota = profile.ai_quota_used ?? 0;
+        document.getElementById('aiQuotaUsed').innerHTML = quota + ' <span style="font-size:14px;">/ 3</span>';
 
         // VIP 状态
-        const vipBadge = document.getElementById('vipBadge');
+        var vipBadge = document.getElementById('vipBadge');
         if (profile.is_vip) {
-          vipBadge.innerHTML = '<span class="tag tag-yellow" style="font-size: 12px;">VIP</span>';
-          const expire = profile.vip_expire_at ? new Date(profile.vip_expire_at) : null;
+          vipBadge.innerHTML = '<span class="tag tag-yellow" style="font-size: 12px;">尊享会员</span>';
+          var expire = profile.vip_expire_at ? new Date(profile.vip_expire_at) : null;
           document.getElementById('vipExpire').textContent = expire
-            ? expire.toLocaleDateString('zh-CN')
-            : '永久';
+            ? expire.toLocaleDateString('zh-CN') + ' 到期'
+            : '永久有效';
         } else {
           vipBadge.innerHTML = '<span class="tag tag-blue" style="font-size: 12px;">普通用户</span>';
           document.getElementById('vipExpire').textContent = '未开通';
