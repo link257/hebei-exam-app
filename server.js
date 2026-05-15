@@ -20,18 +20,17 @@ app.use(express.json());
 // ============================================================
 //  配置注入中间件 — 在 HTML 响应中注入 __ENV__
 // ============================================================
-const ENV_SCRIPT = `<script>window.__ENV__ = ${JSON.stringify({
-  SUPABASE_URL: process.env.SUPABASE_URL || '',
-  SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || '',
-})};</script>`;
-
 function injectEnv(req, res, next) {
-  const original = res.sendFile.bind(res);
+  var script = '<script>window.__ENV__=' + JSON.stringify({
+    SUPABASE_URL: process.env.SUPABASE_URL || '',
+    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || '',
+  }) + ';<\/script>';
+  var original = res.sendFile.bind(res);
   res.sendFile = function (path2, opts, cb) {
     if (typeof path2 === 'string' && path2.endsWith('.html')) {
-      const content = fs.readFileSync(path2, 'utf8');
-      var injected = content.replace('</head>', ENV_SCRIPT + '</head>');
-      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      var content = fs.readFileSync(path2, 'utf8');
+      var injected = content.replace('</head>', script + '</head>');
+      if (!res.get('Content-Type')) res.setHeader('Content-Type', 'text/html; charset=utf-8');
       return res.send(injected);
     }
     return original(path2, opts, cb);
