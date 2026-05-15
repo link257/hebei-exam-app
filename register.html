@@ -134,9 +134,9 @@
           window.location.href = 'index.html';
           return;
         }
-        // 无 session → 需要邮箱验证
-        successEl.style.display = 'block';
-        successEl.innerHTML = '注册成功！请检查你的邮箱（' + email.value.trim() + '），点击验证链接后<a href="login.html" style="color:var(--secondary);font-weight:500;">去登录</a>。';
+        // 无 session → Supabase 开启了邮箱验证
+        errorEl.style.display = 'block';
+        errorEl.innerHTML = '注册成功，但需要先去 Supabase 后台关闭邮箱验证，才能直接登录。<a href="login.html" style="color:var(--secondary);font-weight:500;">去登录</a>';
         form.reset();
         btn.classList.remove('btn-loading');
         btn.textContent = '注 册';
