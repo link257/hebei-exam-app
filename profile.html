@@ -9,46 +9,110 @@
   <meta name="theme-color" content="#1A3A6B">
   <script src="js/config.js"></script>
   <style>
-    .pref-section { margin-bottom: 20px; }
+    /* ===== AI 偏好设置 ===== */
+    .pref-section { margin-bottom: 12px; }
+    .pref-intro {
+      font-size: 13px;
+      color: var(--text-sub);
+      line-height: 1.6;
+      margin-bottom: 14px;
+      padding: 12px 14px;
+      background: #F0F5FF;
+      border-radius: 10px;
+      border-left: 3px solid var(--secondary);
+    }
+    .pref-intro strong { color: var(--primary); }
+
     .pref-card {
       background: var(--card-bg);
       border-radius: 12px;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.06);
       overflow: hidden;
+      border: 1px solid var(--border);
     }
     .pref-header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px;
+      gap: 10px;
+      padding: 14px 16px;
       cursor: pointer;
       font-size: 14px;
       font-weight: 600;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
+      transition: background .15s;
     }
-    .pref-header .arrow { transition: transform .2s; font-size: 12px; }
+    .pref-header:active { background: #f8f9fb; }
+
+    /* 题型标签色 */
+    .pref-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .pref-header .arrow {
+      margin-left: auto;
+      transition: transform .25s ease;
+      font-size: 11px;
+      color: #bbb;
+    }
     .pref-header.open .arrow { transform: rotate(180deg); }
-    .pref-body { display: none; padding: 0 16px 16px; }
+
+    .pref-fill-status {
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--text-sub);
+      background: var(--bg);
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+    .pref-fill-status.done { color: var(--ai-green); background: #E6F9F4; }
+
+    .pref-body { display: none; padding: 0 16px 18px; }
     .pref-body.open { display: block; }
-    .pref-body label { display: block; font-size: 12px; color: var(--text-sub); margin: 10px 0 4px; }
-    .pref-body textarea {
+
+    .pref-field { margin-bottom: 12px; }
+    .pref-field:last-child { margin-bottom: 0; }
+    .pref-field label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--text-sub);
+      margin-bottom: 5px;
+    }
+    .pref-field label .hint-icon {
+      font-size: 14px;
+      cursor: help;
+    }
+    .pref-field textarea {
       width: 100%;
-      padding: 8px 10px;
+      padding: 9px 11px;
       border: 1.5px solid var(--border);
       border-radius: 8px;
       font-size: 13px;
+      line-height: 1.5;
       resize: vertical;
-      min-height: 44px;
+      min-height: 42px;
+      max-height: 120px;
       font-family: inherit;
       outline: none;
       box-sizing: border-box;
+      transition: border-color .2s;
     }
-    .pref-body textarea:focus { border-color: var(--secondary); }
+    .pref-field textarea:focus { border-color: var(--secondary); }
+
+    /* 保存条 */
+    .pref-save-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
     .pref-save-btn {
-      width: 100%;
-      padding: 10px;
+      flex: 1;
+      padding: 12px;
       border: none;
       border-radius: 10px;
       background: var(--secondary);
@@ -56,11 +120,15 @@
       font-size: 14px;
       font-weight: 500;
       cursor: pointer;
-      margin-top: 4px;
+      transition: opacity .15s;
     }
     .pref-save-btn:active { opacity: .8; }
-    .pref-save-btn.saved { background: var(--ai-green); }
-    .pref-save-status { font-size: 12px; color: var(--ai-green); text-align: center; margin-top: 6px; display: none; }
+    .pref-save-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .pref-save-status {
+      font-size: 12px;
+      color: var(--ai-green);
+      white-space: nowrap;
+    }
   </style>
 </head>
 <body>
@@ -98,9 +166,16 @@
       AI 答题偏好
       <span class="more" id="expandAllBtn" style="cursor:pointer;">全部展开</span>
     </div>
+    <div class="pref-intro">
+      <strong>每种题型，AI 为你量身定制</strong><br>
+      告诉 AI 你偏好的答题风格，每次生成参考答案都会自动融入你的个人特色。
+      这是你区别于其他考生的<strong>核心竞争力</strong>。
+    </div>
     <div class="pref-section" id="prefContainer"></div>
-    <button class="pref-save-btn" id="prefSaveBtn">保存偏好设置</button>
-    <div class="pref-save-status" id="prefSaveStatus">✓ 已保存</div>
+    <div class="pref-save-bar">
+      <button class="pref-save-btn" id="prefSaveBtn">保存偏好设置</button>
+      <span class="pref-save-status" id="prefSaveStatus"></span>
+    </div>
 
     <!-- 功能菜单 -->
     <div class="section-title">功能设置</div>
@@ -225,41 +300,78 @@
           document.getElementById('vipExpire').textContent = '未开通';
         }
         // ===== AI 答题偏好 =====
+        var COLORS = ['#2D6BE4','#00B894','#F4A100','#6C5CE7','#00B4D8'];
         var TYPES = ['综合分析','组织管理','应急应变','人际关系','情景模拟'];
         var LABELS = { opening:'开场习惯', analysis:'分析框架', conclusion:'结尾风格' };
         var FIELDS = ['opening','analysis','conclusion'];
         var HINTS = {
           综合分析:{ opening:'从社会现象切入，点明本质', analysis:'采用原因-影响-对策三层结构', conclusion:'结尾联系到基层治理实际' },
-          组织管理:{ opening:'明确活动目的和意义', analysis:'按事前-事中-事后逻辑展开', conclusion:'总结经验，展望长效机制' },
-          应急应变:{ opening:'快速反应，表明处理原则', analysis:'先控场-再溯源-后解决', conclusion:'反思不足，完善预案' },
+          组织管理:{ opening:'明确活动目的和意义', analysis:'按事前-事中-事后逻辑展开', conclusion:'总结活动经验，展望长效机制' },
+          应急应变:{ opening:'快速反应，表明处理原则', analysis:'先控场-再溯源-后解决', conclusion:'反思不足，完善应急预案' },
           人际关系:{ opening:'以工作为重，态度诚恳', analysis:'换位思考-沟通化解-总结提升', conclusion:'加强沟通，促进团队和谐' },
           情景模拟:{ opening:'进入角色，语气贴合身份', analysis:'动之以情-晓之以理-导之以行', conclusion:'达成共识，明确后续行动' }
         };
 
         var prefs = profile.ai_preferences || {};
         var container = document.getElementById('prefContainer');
+        var totalChanged = false;
 
-        TYPES.forEach(function(t) {
+        function countFilled(obj) {
+          return FIELDS.filter(function(f) { return obj[f] && obj[f].trim(); }).length;
+        }
+
+        TYPES.forEach(function(t, i) {
           var typePrefs = prefs[t] || {};
+          var filled = countFilled(typePrefs);
+
+          // 头部
+          var dot = document.createElement('span');
+          dot.className = 'pref-dot';
+          dot.style.background = COLORS[i];
+
+          var title = document.createElement('span');
+          title.textContent = t;
+
+          var status = document.createElement('span');
+          status.className = 'pref-fill-status' + (filled === 3 ? ' done' : '');
+          status.textContent = filled + ' / 3';
+
+          var arrow = document.createElement('span');
+          arrow.className = 'arrow';
+          arrow.textContent = '▼';
+
           var header = document.createElement('div');
           header.className = 'pref-header';
-          header.innerHTML = t + ' <span class="arrow">▼</span>';
+          header.appendChild(dot);
+          header.appendChild(title);
+          header.appendChild(status);
+          header.appendChild(arrow);
 
+          // 内容区
           var body = document.createElement('div');
           body.className = 'pref-body';
 
           FIELDS.forEach(function(f) {
+            var wrapper = document.createElement('div');
+            wrapper.className = 'pref-field';
+
             var label = document.createElement('label');
             label.textContent = LABELS[f];
+
             var ta = document.createElement('textarea');
-            ta.placeholder = HINTS[t][f];
+            ta.placeholder = '例：' + HINTS[t][f];
             ta.value = typePrefs[f] || '';
             ta.dataset.type = t;
             ta.dataset.field = f;
-            body.appendChild(label);
-            body.appendChild(ta);
+
+            ta.oninput = function() { totalChanged = true; };
+
+            wrapper.appendChild(label);
+            wrapper.appendChild(ta);
+            body.appendChild(wrapper);
           });
 
+          // 点击展开/收起
           header.onclick = function() {
             header.classList.toggle('open');
             body.classList.toggle('open');
@@ -286,12 +398,26 @@
         };
 
         // 保存
-        document.getElementById('prefSaveBtn').onclick = async function() {
-          var btn = this;
-          var status = document.getElementById('prefSaveStatus');
-          status.style.display = 'none';
-          btn.textContent = '保存中...';
-          btn.disabled = true;
+        var saveBtn = document.getElementById('prefSaveBtn');
+        var saveStatus = document.getElementById('prefSaveStatus');
+
+        function updateFillStatus() {
+          document.querySelectorAll('.pref-card').forEach(function(card, i) {
+            var tas = card.querySelectorAll('textarea');
+            var filled = 0;
+            tas.forEach(function(ta) {
+              if (ta.value.trim()) filled++;
+            });
+            var badge = card.querySelector('.pref-fill-status');
+            badge.textContent = filled + ' / 3';
+            badge.className = 'pref-fill-status' + (filled === 3 ? ' done' : '');
+          });
+        }
+
+        saveBtn.onclick = async function() {
+          saveBtn.disabled = true;
+          saveBtn.textContent = '保存中…';
+          saveStatus.textContent = '';
 
           var newPrefs = {};
           TYPES.forEach(function(t) { newPrefs[t] = {}; });
@@ -301,15 +427,16 @@
 
           try {
             await AUTH.updatePreferences(user.id, newPrefs);
-            btn.textContent = '保存偏好设置';
-            btn.disabled = false;
-            status.style.display = 'block';
-            setTimeout(function() { status.style.display = 'none'; }, 2000);
+            updateFillStatus();
+            totalChanged = false;
+            saveBtn.textContent = '保存偏好设置';
+            saveStatus.textContent = '✓ 已保存';
+            setTimeout(function() { saveStatus.textContent = ''; }, 2500);
           } catch (e) {
-            btn.textContent = '保存失败，重试';
-            btn.disabled = false;
+            saveBtn.textContent = '保存失败，点此重试';
             console.error('保存偏好失败:', e);
           }
+          saveBtn.disabled = false;
         };
       } catch (err) {
         console.error('个人中心加载失败:', err);
