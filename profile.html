@@ -8,6 +8,60 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#1A3A6B">
   <script src="js/config.js"></script>
+  <style>
+    .pref-section { margin-bottom: 20px; }
+    .pref-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      margin-bottom: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+    .pref-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .pref-header .arrow { transition: transform .2s; font-size: 12px; }
+    .pref-header.open .arrow { transform: rotate(180deg); }
+    .pref-body { display: none; padding: 0 16px 16px; }
+    .pref-body.open { display: block; }
+    .pref-body label { display: block; font-size: 12px; color: var(--text-sub); margin: 10px 0 4px; }
+    .pref-body textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      resize: vertical;
+      min-height: 44px;
+      font-family: inherit;
+      outline: none;
+      box-sizing: border-box;
+    }
+    .pref-body textarea:focus { border-color: var(--secondary); }
+    .pref-save-btn {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      background: var(--secondary);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+    .pref-save-btn:active { opacity: .8; }
+    .pref-save-btn.saved { background: var(--ai-green); }
+    .pref-save-status { font-size: 12px; color: var(--ai-green); text-align: center; margin-top: 6px; display: none; }
+  </style>
 </head>
 <body>
   <div class="page-container">
@@ -38,6 +92,15 @@
         <div style="font-size: 11px; color: var(--text-sub); margin-top: 4px;">会员到期</div>
       </div>
     </div>
+
+    <!-- 个性化设置 -->
+    <div class="section-title">
+      AI 答题偏好
+      <span class="more" id="expandAllBtn" style="cursor:pointer;">全部展开</span>
+    </div>
+    <div class="pref-section" id="prefContainer"></div>
+    <button class="pref-save-btn" id="prefSaveBtn">保存偏好设置</button>
+    <div class="pref-save-status" id="prefSaveStatus">✓ 已保存</div>
 
     <!-- 功能菜单 -->
     <div class="section-title">功能设置</div>
@@ -161,6 +224,93 @@
           vipBadge.innerHTML = '<span class="tag tag-blue" style="font-size: 12px;">普通用户</span>';
           document.getElementById('vipExpire').textContent = '未开通';
         }
+        // ===== AI 答题偏好 =====
+        var TYPES = ['综合分析','组织管理','应急应变','人际关系','情景模拟'];
+        var LABELS = { opening:'开场习惯', analysis:'分析框架', conclusion:'结尾风格' };
+        var FIELDS = ['opening','analysis','conclusion'];
+        var HINTS = {
+          综合分析:{ opening:'从社会现象切入，点明本质', analysis:'采用原因-影响-对策三层结构', conclusion:'结尾联系到基层治理实际' },
+          组织管理:{ opening:'明确活动目的和意义', analysis:'按事前-事中-事后逻辑展开', conclusion:'总结经验，展望长效机制' },
+          应急应变:{ opening:'快速反应，表明处理原则', analysis:'先控场-再溯源-后解决', conclusion:'反思不足，完善预案' },
+          人际关系:{ opening:'以工作为重，态度诚恳', analysis:'换位思考-沟通化解-总结提升', conclusion:'加强沟通，促进团队和谐' },
+          情景模拟:{ opening:'进入角色，语气贴合身份', analysis:'动之以情-晓之以理-导之以行', conclusion:'达成共识，明确后续行动' }
+        };
+
+        var prefs = profile.ai_preferences || {};
+        var container = document.getElementById('prefContainer');
+
+        TYPES.forEach(function(t) {
+          var typePrefs = prefs[t] || {};
+          var header = document.createElement('div');
+          header.className = 'pref-header';
+          header.innerHTML = t + ' <span class="arrow">▼</span>';
+
+          var body = document.createElement('div');
+          body.className = 'pref-body';
+
+          FIELDS.forEach(function(f) {
+            var label = document.createElement('label');
+            label.textContent = LABELS[f];
+            var ta = document.createElement('textarea');
+            ta.placeholder = HINTS[t][f];
+            ta.value = typePrefs[f] || '';
+            ta.dataset.type = t;
+            ta.dataset.field = f;
+            body.appendChild(label);
+            body.appendChild(ta);
+          });
+
+          header.onclick = function() {
+            header.classList.toggle('open');
+            body.classList.toggle('open');
+          };
+
+          var card = document.createElement('div');
+          card.className = 'pref-card';
+          card.appendChild(header);
+          card.appendChild(body);
+          container.appendChild(card);
+        });
+
+        // 全部展开/收起
+        var allExpanded = false;
+        document.getElementById('expandAllBtn').onclick = function() {
+          allExpanded = !allExpanded;
+          document.querySelectorAll('.pref-header').forEach(function(h) {
+            h.classList.toggle('open', allExpanded);
+          });
+          document.querySelectorAll('.pref-body').forEach(function(b) {
+            b.classList.toggle('open', allExpanded);
+          });
+          this.textContent = allExpanded ? '全部收起' : '全部展开';
+        };
+
+        // 保存
+        document.getElementById('prefSaveBtn').onclick = async function() {
+          var btn = this;
+          var status = document.getElementById('prefSaveStatus');
+          status.style.display = 'none';
+          btn.textContent = '保存中...';
+          btn.disabled = true;
+
+          var newPrefs = {};
+          TYPES.forEach(function(t) { newPrefs[t] = {}; });
+          document.querySelectorAll('.pref-body textarea').forEach(function(ta) {
+            newPrefs[ta.dataset.type][ta.dataset.field] = ta.value;
+          });
+
+          try {
+            await AUTH.updatePreferences(user.id, newPrefs);
+            btn.textContent = '保存偏好设置';
+            btn.disabled = false;
+            status.style.display = 'block';
+            setTimeout(function() { status.style.display = 'none'; }, 2000);
+          } catch (e) {
+            btn.textContent = '保存失败，重试';
+            btn.disabled = false;
+            console.error('保存偏好失败:', e);
+          }
+        };
       } catch (err) {
         console.error('个人中心加载失败:', err);
       }

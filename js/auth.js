@@ -68,12 +68,22 @@ const AUTH = (() => {
     const c = await initClient();
     const { data, error } = await c
       .from('user_profiles')
-      .select('is_vip, vip_expire_at, ai_quota_used')
+      .select('is_vip, vip_expire_at, ai_quota_used, ai_preferences')
       .eq('id', userId)
       .single();
     if (error) throw error;
     return data;
   }
 
-  return { login, register, logout, getCurrentUser, onAuthChange, getUserProfile };
+  /** 更新用户偏好（ai_preferences） */
+  async function updatePreferences(userId, preferences) {
+    const c = await initClient();
+    const { error } = await c
+      .from('user_profiles')
+      .update({ ai_preferences: preferences })
+      .eq('id', userId);
+    if (error) throw error;
+  }
+
+  return { login, register, logout, getCurrentUser, onAuthChange, getUserProfile, updatePreferences };
 })();
